@@ -2,20 +2,20 @@
 
 Compile an info.json for a particular keyboard and pretty-print it.
 """
+import sys
 import json
-import platform
 
 from milc import cli
 
-from qmk.info_json_encoder import InfoJSONEncoder
+from qmk.json_encoders import InfoJSONEncoder
 from qmk.constants import COL_LETTERS, ROW_LETTERS
 from qmk.decorators import automagic_keyboard, automagic_keymap
-from qmk.keyboard import render_layouts, render_layout
+from qmk.keyboard import keyboard_completer, keyboard_folder, render_layouts, render_layout
 from qmk.keymap import locate_keymap
 from qmk.info import info_json
 from qmk.path import is_keyboard
 
-platform_id = platform.platform().lower()
+UNICODE_SUPPORT = sys.stdout.encoding.lower().startswith('utf')
 
 
 def show_keymap(kb_info_json, title_caps=True):
@@ -124,12 +124,12 @@ def print_text_output(kb_info_json):
         show_keymap(kb_info_json, False)
 
 
-@cli.argument('-kb', '--keyboard', help='Keyboard to show info for.')
+@cli.argument('-kb', '--keyboard', type=keyboard_folder, completer=keyboard_completer, help='Keyboard to show info for.')
 @cli.argument('-km', '--keymap', help='Show the layers for a JSON keymap too.')
 @cli.argument('-l', '--layouts', action='store_true', help='Render the layouts.')
 @cli.argument('-m', '--matrix', action='store_true', help='Render the layouts with matrix information.')
 @cli.argument('-f', '--format', default='friendly', arg_only=True, help='Format to display the data in (friendly, text, json) (Default: friendly).')
-@cli.argument('--ascii', action='store_true', default='windows' in platform_id, help='Render layout box drawings in ASCII only.')
+@cli.argument('--ascii', action='store_true', default=not UNICODE_SUPPORT, help='Render layout box drawings in ASCII only.')
 @cli.subcommand('Keyboard information.')
 @automagic_keyboard
 @automagic_keymap
